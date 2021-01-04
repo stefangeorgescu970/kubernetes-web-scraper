@@ -12,12 +12,12 @@ export interface IScrapeResult {
     info?: string;
     type?: ScrapeResultType;
     source?: ScrapeResultSource;
-    page?: string;
+    pages?: string[];
 }
 
 export default class ScrapeResult {
     public info: string;
-    public page: string;
+    public pages: string[];
     public type: ScrapeResultType;
     public source: ScrapeResultSource;
 
@@ -25,6 +25,6 @@ export default class ScrapeResult {
         this.info = args.info || "";
         this.type = args.type || ScrapeResultType.EMAIL;
         this.source = args.source || ScrapeResultSource.REGEX;
-        this.page = args.page || "";
+        this.pages = args.pages || [];
     }
 }

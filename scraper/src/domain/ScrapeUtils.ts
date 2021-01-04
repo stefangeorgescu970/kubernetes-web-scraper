@@ -1,3 +1,4 @@
+import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
 import fetch from "node-fetch";
@@ -8,6 +9,7 @@ import ScrapeResult, {
 
 export default class ScrapeUtils {
     private regexEnabled = false;
+    private depthScraping = true;
 
     private emailRegex = new RegExp(
         fs.readFileSync("../resources/email-regex.txt").toString(),
@@ -16,18 +18,64 @@ export default class ScrapeUtils {
         fs.readFileSync("../resources/phone-regex.txt").toString(),
     );
 
-    public async extractInformation(path: string): Promise<ScrapeResult[]> {
-        const html = await this.loadHTML(path);
-        const scrapeResults = this.parseRequiredData(html, path);
-        const filteredScrapeResults = this.filterScrapeResults(scrapeResults);
-        return filteredScrapeResults;
+    public async extractInformation(domain: string): Promise<ScrapeResult[]> {
+        const pages: string[] = [domain];
+        const filteredScrapeResults: ScrapeResult[] = [];
+
+        for (let index = 0; index < pages.length; index++) {
+            const currentPage = pages[index];
+            console.log(`LOG - Scraping page ${currentPage}`);
+
+            try {
+                const res = await axios.get(
+                    currentPage.startsWith("https")
+                        ? currentPage
+                        : `https://${currentPage}`,
+                );
+                const html = res.data;
+                const scrapeResults = this.parseRequiredData(html, currentPage);
+                filteredScrapeResults.push(
+                    ...this.filterScrapeResults(scrapeResults),
+                );
+
+                if (this.depthScraping) {
+                    const domainLinks = this.getDomainLinksFromPage(html, domain);
+                    domainLinks.forEach((link) => {
+                        if (!pages.includes(link)) {
+                            pages.push(link);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log(`LOG - error when processing page ${currentPage}`);
+            }
+        }
+
+        return this.mergeScrapeResults(filteredScrapeResults);
     }
 
-    private async loadHTML(path: string): Promise<string> {
-        const res = await fetch(`http://${path}`);
-        const html = await res.text();
+    private getDomainLinksFromPage(html: string, domain: string): string[] {
+        const result: string[] = [];
+        const $ = cheerio.load(html);
+        $("a").each((index, elem) => {
+            const hrefText = $(elem).attr("href");
 
-        return html;
+            if (hrefText) {
+                if (
+                    hrefText.indexOf(domain) !== -1 &&
+                    hrefText.indexOf("mailto") === -1 &&
+                    !hrefText.endsWith(".jpg") &&
+                    !hrefText.endsWith(".png") &&
+                    !hrefText.endsWith(".pdf") &&
+                    hrefText.indexOf("?") === -1 &&
+                    (hrefText.indexOf("about") !== -1 || hrefText.indexOf("contact") !== -1)
+                ) {
+                    result.push(hrefText);
+                }
+            }
+        });
+
+        return result;
     }
 
     private parseRequiredData(html: string, source: string): ScrapeResult[] {
@@ -42,7 +90,7 @@ export default class ScrapeUtils {
                     results.push(
                         new ScrapeResult({
                             info: hrefText.slice(hrefText.indexOf(":") + 1),
-                            page: source,
+                            pages: [source],
                             source: ScrapeResultSource.URI,
                             type: ScrapeResultType.PHONE,
                         }),
@@ -53,7 +101,7 @@ export default class ScrapeUtils {
                     results.push(
                         new ScrapeResult({
                             info: hrefText.slice(hrefText.indexOf(":") + 1),
-                            page: source,
+                            pages: [source],
                             source: ScrapeResultSource.URI,
                             type: ScrapeResultType.EMAIL,
                         }),
@@ -69,7 +117,7 @@ export default class ScrapeUtils {
                     results.push(
                         new ScrapeResult({
                             info: email,
-                            page: source,
+                            pages: [source],
                             source: ScrapeResultSource.REGEX,
                             type: ScrapeResultType.EMAIL,
                         }),
@@ -83,7 +131,7 @@ export default class ScrapeUtils {
                     results.push(
                         new ScrapeResult({
                             info: phone,
-                            page: source,
+                            pages: [source],
                             source: ScrapeResultSource.REGEX,
                             type: ScrapeResultType.PHONE,
                         }),
@@ -102,5 +150,27 @@ export default class ScrapeUtils {
             }
             return true;
         });
+    }
+
+    private mergeScrapeResults(results: ScrapeResult[]): ScrapeResult[] {
+        const mergedResults: ScrapeResult[] = [];
+
+        results.forEach((result) => {
+            let indexOf = -1;
+            for (let index = 0; index < mergedResults.length; index++) {
+                if (result.info === mergedResults[index].info && result.source === mergedResults[index].source) {
+                    indexOf = index;
+                    break;
+                }
+            }
+
+            if (indexOf !== -1) {
+                mergedResults[indexOf].pages.push(...result.pages);
+            } else {
+                mergedResults.push(result);
+            }
+        });
+
+        return mergedResults;
     }
 }
