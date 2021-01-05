@@ -21,7 +21,9 @@ export default class ScrapeUtils {
         const pages: string[] = [domain];
         const filteredScrapeResults: ScrapeResult[] = [];
         const browser = await puppeteer.launch({
+            args: ["--no-sandbox"],
             ignoreHTTPSErrors: true,
+            timeout: 10000,
           });
         const page = await browser.newPage();
 
