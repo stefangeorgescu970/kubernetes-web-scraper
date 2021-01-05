@@ -1,6 +1,6 @@
-import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
+import puppeteer from "puppeteer";
 import ScrapeResult, {
     ScrapeResultSource,
     ScrapeResultType,
@@ -11,28 +11,33 @@ export default class ScrapeUtils {
     private depthScraping = true;
 
     private emailRegex = new RegExp(
-        fs.readFileSync("../resources/email-regex.txt").toString(),
+        fs.readFileSync("./resources/email-regex.txt").toString(),
     );
     private phoneRegex = new RegExp(
-        fs.readFileSync("../resources/phone-regex.txt").toString(),
+        fs.readFileSync("./resources/phone-regex.txt").toString(),
     );
 
     public async extractInformation(domain: string): Promise<ScrapeResult[]> {
         const pages: string[] = [domain];
         const filteredScrapeResults: ScrapeResult[] = [];
+        const browser = await puppeteer.launch({
+            args: ["--no-sandbox"],
+            ignoreHTTPSErrors: true,
+            timeout: 10000,
+          });
+        const page = await browser.newPage();
 
         for (const currentPage of pages) {
             console.log(`LOG - Scraping page ${currentPage}`);
 
             try {
-                // Added timeout in order to be able to test while my requests were very slow.
-                const res = await axios.get(
-                    currentPage.startsWith("https")
+                await page.goto(
+                    currentPage.startsWith("http")
                         ? currentPage
                         : `https://${currentPage}`,
-                    { timeout: 1000 },
+                    { waitUntil: "networkidle0" },
                 );
-                const html = res.data;
+                const html = await page.evaluate(() => document.querySelector("*").outerHTML);
                 const scrapeResults = this.parseRequiredData(html, currentPage);
                 filteredScrapeResults.push(
                     ...this.filterScrapeResults(scrapeResults),
@@ -51,6 +56,8 @@ export default class ScrapeUtils {
                 console.log(error.stack);
             }
         }
+
+        await browser.close();
 
         return this.mergeScrapeResults(filteredScrapeResults);
     }
