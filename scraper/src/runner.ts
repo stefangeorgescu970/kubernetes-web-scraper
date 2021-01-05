@@ -20,7 +20,7 @@ fs.readFile("../resources/sample-websites.csv", async (err, data) => {
         scrapingResults.push(...scrapeData);
     }
 
-    fs.writeFile("./results.json", JSON.stringify(scrapingResults), (error) => {
+    fs.writeFile("./results-dev.json", JSON.stringify(scrapingResults), (error) => {
         if (error) { throw error; }
         console.log("LOG - Processing complete");
     });

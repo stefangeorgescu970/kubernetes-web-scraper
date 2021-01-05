@@ -1,7 +1,6 @@
 import axios from "axios";
 import cheerio from "cheerio";
 import fs from "fs";
-import fetch from "node-fetch";
 import ScrapeResult, {
     ScrapeResultSource,
     ScrapeResultType,
@@ -22,15 +21,16 @@ export default class ScrapeUtils {
         const pages: string[] = [domain];
         const filteredScrapeResults: ScrapeResult[] = [];
 
-        for (let index = 0; index < pages.length; index++) {
-            const currentPage = pages[index];
+        for (const currentPage of pages) {
             console.log(`LOG - Scraping page ${currentPage}`);
 
             try {
+                // Added timeout in order to be able to test while my requests were very slow.
                 const res = await axios.get(
                     currentPage.startsWith("https")
                         ? currentPage
                         : `https://${currentPage}`,
+                    { timeout: 1000 },
                 );
                 const html = res.data;
                 const scrapeResults = this.parseRequiredData(html, currentPage);
@@ -48,6 +48,7 @@ export default class ScrapeUtils {
                 }
             } catch (error) {
                 console.log(`LOG - error when processing page ${currentPage}`);
+                console.log(error.stack);
             }
         }
 
@@ -144,11 +145,10 @@ export default class ScrapeUtils {
     }
 
     private filterScrapeResults(results: ScrapeResult[]): ScrapeResult[] {
+        // Method added as a response to the regular expressions sometimes matching empty strings.
+
         return results.filter((result) => {
-            if (result.info === "") {
-                return false;
-            }
-            return true;
+            return result.info !== "";
         });
     }
 
