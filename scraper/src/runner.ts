@@ -2,7 +2,7 @@ import fs from "fs";
 import ScrapeResult from "./domain/ScrapeResult";
 import ScrapeUtils from "./domain/ScrapeUtils";
 
-fs.readFile("../resources/sample-websites.csv", async (err, data) => {
+fs.readFile("./resources/sample-websites.csv", async (err, data) => {
     if (err) {
         throw err;
     }

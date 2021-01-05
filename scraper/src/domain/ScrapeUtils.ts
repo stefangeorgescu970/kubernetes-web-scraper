@@ -11,10 +11,10 @@ export default class ScrapeUtils {
     private depthScraping = true;
 
     private emailRegex = new RegExp(
-        fs.readFileSync("../resources/email-regex.txt").toString(),
+        fs.readFileSync("./resources/email-regex.txt").toString(),
     );
     private phoneRegex = new RegExp(
-        fs.readFileSync("../resources/phone-regex.txt").toString(),
+        fs.readFileSync("./resources/phone-regex.txt").toString(),
     );
 
     public async extractInformation(domain: string): Promise<ScrapeResult[]> {
