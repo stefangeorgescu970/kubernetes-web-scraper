@@ -4,17 +4,27 @@
   "description": "Code required to scrape a single website",
   "main": "dist/app.js",
   "scripts": {
-    "start": "tsc && node dist/app.js",
+    "start:app": "tsc && node dist/app.js",
+    "start:runner": "tsc && node --stack-size=65500 dist/runner.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/cheerio": "^0.22.23",
     "@types/express": "^4.16.1",
+    "@types/node-fetch": "^2.5.7",
+    "@types/puppeteer": "^5.4.2",
     "tslint": "^5.12.1",
     "typescript": "^3.3.3"
   },
   "dependencies": {
-    "express": "^4.16.4"
+    "@types/node": "^14.14.19",
+    "axios": "^0.21.1",
+    "cheerio": "^0.22.0",
+    "express": "^4.16.4",
+    "fs": "0.0.1-security",
+    "node-fetch": "^2.6.1",
+    "puppeteer": "^5.5.0"
   }
 }
