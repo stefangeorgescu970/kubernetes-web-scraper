@@ -15,13 +15,23 @@ fs.readFile("./resources/sample-websites.csv", async (err, data) => {
 
     for (let index = 0; index < numberOfDomainsToScrape; index++) {
         const website = websites[index];
-        console.log(`LOG - Processing domain ${website} (${index + 1} of ${numberOfDomainsToScrape})`);
+        console.log(
+            `LOG - Processing domain ${website} (${
+                index + 1
+            } of ${numberOfDomainsToScrape})`
+        );
         const scrapeData = await scraper.extractInformation(website);
         scrapingResults.push(...scrapeData);
     }
 
-    fs.writeFile("./results-dev.json", JSON.stringify(scrapingResults), (error) => {
-        if (error) { throw error; }
-        console.log("LOG - Processing complete");
-    });
+    fs.writeFile(
+        "./results-dev.json",
+        JSON.stringify(scrapingResults),
+        error => {
+            if (error) {
+                throw error;
+            }
+            console.log("LOG - Processing complete");
+        }
+    );
 });
