@@ -1,14 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: load-balancer
+  name: scraper-svc
   labels:
-    app: scraper
+    app: scraper-dpl
 spec:
-  type: NodePort
   ports:
     - port: 3000
       targetPort: 3000
-      name: http
+      protocol: TCP
   selector:
-    app: scraper
+    app: scraper-dpl

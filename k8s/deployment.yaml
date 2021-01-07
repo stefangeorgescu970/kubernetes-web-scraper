@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: scraper
+  name: scraper-dpl
   labels:
-    app: scraper
+    app: scraper-dpl
 spec:
   replicas: 5
   selector:
     matchLabels:
-      app: scraper
+      app: scraper-dpl
   template:
     metadata:
       labels:
-        app: scraper
+        app: scraper-dpl
     spec:
       containers:
       - name: scraper-api
