@@ -11,10 +11,10 @@ export default class ScrapeUtils {
     private depthScraping = true;
 
     private emailRegex = new RegExp(
-        fs.readFileSync("./resources/email-regex.txt").toString(),
+        fs.readFileSync("./resources/email-regex.txt").toString()
     );
     private phoneRegex = new RegExp(
-        fs.readFileSync("./resources/phone-regex.txt").toString(),
+        fs.readFileSync("./resources/phone-regex.txt").toString()
     );
 
     public async extractInformation(domain: string): Promise<ScrapeResult[]> {
@@ -24,7 +24,7 @@ export default class ScrapeUtils {
             args: ["--no-sandbox"],
             ignoreHTTPSErrors: true,
             timeout: 10000,
-          });
+        });
         const page = await browser.newPage();
 
         for (const currentPage of pages) {
@@ -35,17 +35,22 @@ export default class ScrapeUtils {
                     currentPage.startsWith("http")
                         ? currentPage
                         : `https://${currentPage}`,
-                    { waitUntil: "networkidle0" },
+                    { waitUntil: "networkidle0" }
                 );
-                const html = await page.evaluate(() => document.querySelector("*").outerHTML);
+                const html = await page.evaluate(
+                    () => document.querySelector("*").outerHTML
+                );
                 const scrapeResults = this.parseRequiredData(html, currentPage);
                 filteredScrapeResults.push(
-                    ...this.filterScrapeResults(scrapeResults),
+                    ...this.filterScrapeResults(scrapeResults)
                 );
 
                 if (this.depthScraping) {
-                    const domainLinks = this.getDomainLinksFromPage(html, domain);
-                    domainLinks.forEach((link) => {
+                    const domainLinks = this.getDomainLinksFromPage(
+                        html,
+                        domain
+                    );
+                    domainLinks.forEach(link => {
                         if (!pages.includes(link)) {
                             pages.push(link);
                         }
@@ -76,7 +81,8 @@ export default class ScrapeUtils {
                     !hrefText.endsWith(".png") &&
                     !hrefText.endsWith(".pdf") &&
                     hrefText.indexOf("?") === -1 &&
-                    (hrefText.indexOf("about") !== -1 || hrefText.indexOf("contact") !== -1)
+                    (hrefText.indexOf("about") !== -1 ||
+                        hrefText.indexOf("contact") !== -1)
                 ) {
                     result.push(hrefText);
                 }
@@ -101,7 +107,7 @@ export default class ScrapeUtils {
                             pages: [source],
                             source: ScrapeResultSource.URI,
                             type: ScrapeResultType.PHONE,
-                        }),
+                        })
                     );
                 }
 
@@ -112,7 +118,7 @@ export default class ScrapeUtils {
                             pages: [source],
                             source: ScrapeResultSource.URI,
                             type: ScrapeResultType.EMAIL,
-                        }),
+                        })
                     );
                 }
             }
@@ -121,28 +127,28 @@ export default class ScrapeUtils {
         if (this.regexEnabled) {
             const emails = html.match(this.emailRegex);
             if (emails) {
-                emails.forEach((email) => {
+                emails.forEach(email => {
                     results.push(
                         new ScrapeResult({
                             info: email,
                             pages: [source],
                             source: ScrapeResultSource.REGEX,
                             type: ScrapeResultType.EMAIL,
-                        }),
+                        })
                     );
                 });
             }
 
             const phones = html.match(this.phoneRegex);
             if (phones) {
-                phones.forEach((phone) => {
+                phones.forEach(phone => {
                     results.push(
                         new ScrapeResult({
                             info: phone,
                             pages: [source],
                             source: ScrapeResultSource.REGEX,
                             type: ScrapeResultType.PHONE,
-                        }),
+                        })
                     );
                 });
             }
@@ -154,7 +160,7 @@ export default class ScrapeUtils {
     private filterScrapeResults(results: ScrapeResult[]): ScrapeResult[] {
         // Method added as a response to the regular expressions sometimes matching empty strings.
 
-        return results.filter((result) => {
+        return results.filter(result => {
             return result.info !== "";
         });
     }
@@ -162,10 +168,13 @@ export default class ScrapeUtils {
     private mergeScrapeResults(results: ScrapeResult[]): ScrapeResult[] {
         const mergedResults: ScrapeResult[] = [];
 
-        results.forEach((result) => {
+        results.forEach(result => {
             let indexOf = -1;
             for (let index = 0; index < mergedResults.length; index++) {
-                if (result.info === mergedResults[index].info && result.source === mergedResults[index].source) {
+                if (
+                    result.info === mergedResults[index].info &&
+                    result.source === mergedResults[index].source
+                ) {
                     indexOf = index;
                     break;
                 }

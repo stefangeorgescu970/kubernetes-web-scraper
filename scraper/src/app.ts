@@ -9,9 +9,15 @@ app.get("/", async (req, res) => {
         const scraper = new ScrapeUtils();
 
         if (domain) {
-            const scrapeResults = await scraper.extractInformation(domain);
-            res.send(JSON.stringify(scrapeResults));
-            console.log("Done scraping");
+            scraper
+                .extractInformation(domain)
+                .then(scrapeResults => {
+                    res.send(JSON.stringify(scrapeResults));
+                    console.log("Done scraping");
+                })
+                .catch(err => {
+                    console.log("Error extracting information.");
+                });
         } else {
             res.send("Please provide parameter");
         }
