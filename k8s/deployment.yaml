@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-dpl
+  labels:
+    app: scraper-dpl
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: scraper-dpl
+  template:
+    metadata:
+      labels:
+        app: scraper-dpl
+    spec:
+      containers:
+      - name: scraper-api
+        image: scraper-api
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
